@@ -22,6 +22,13 @@ RakeLeiningen.define_installation_tasks(
   version: '2.11.2'
 )
 
+namespace :leiningen do
+  desc 'Print leiningen version'
+  task :version do
+    puts RubyLeiningen.version
+  end
+end
+
 RakeGitCrypt.define_standard_tasks(
   namespace: :git_crypt,
 
