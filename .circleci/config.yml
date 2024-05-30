@@ -66,6 +66,45 @@ commands:
                 channel: builds
                 template: SLACK_SUCCESS_NOTIFICATION
 
+  restore_clojure_dependency_cache:
+    steps:
+      - restore_cache:
+          keys:
+            - maven-repo-v1-{{ checksum "project.clj" }}
+            - maven-repo-v1-
+
+  restore_ruby_dependency_cache:
+    steps:
+      - restore_cache:
+          keys:
+            - gem-cache-{{ arch }}-v2-{{ checksum "Gemfile.lock" }}
+            - gem-cache-{{ arch }}-v2-
+
+  restore_dependency_caches:
+    steps:
+      - restore_clojure_dependency_cache
+      - restore_ruby_dependency_cache
+
+  save_clojure_dependency_cache:
+    steps:
+      - save_cache:
+          key: maven-repo-v1-{{ checksum "project.clj" }}
+          paths:
+            - ~/.m2/repository
+
+  save_ruby_dependency_cache:
+    steps:
+      - save_cache:
+          key: gem-cache-{{ arch }}-v2-{{ checksum "Gemfile.lock" }}
+          paths:
+            - ~/.bundle
+            - ~/.asdf/installs/ruby/3.1.1/lib/ruby/gems
+
+  save_dependency_caches:
+    steps:
+      - save_clojure_dependency_cache
+      - save_ruby_dependency_cache
+
   configure_build_tools:
     steps:
       - run: ./scripts/ci/common/install-slack-deps.sh
