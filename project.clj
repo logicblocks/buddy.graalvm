@@ -1,4 +1,4 @@
-(defproject io.logicblocks/buddy.graalvm "0.1.0-RC0"
+(defproject io.logicblocks/buddy.graalvm "0.1.0-RC1"
   :description "Support functions for other logicblocks components."
   :url "Definitions to enable using buddy with GraalVM native images."
 
