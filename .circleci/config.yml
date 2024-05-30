@@ -76,7 +76,7 @@ commands:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:5jvtKMEpPNfbu+IwNEJ2cAk3SpaERlSHJdZUAdTFcAY"
+            - "SHA256:c+72W8vBuVauCyFe/gJVzLOhhX6W9Tg4CJtMoI4CEUg"
       - run: ./scripts/ci/common/configure-git.sh
       - run: ./scripts/ci/common/configure-clojars.sh
 
