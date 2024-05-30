@@ -1,14 +1,15 @@
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.8.3
+  slack: circleci/slack@4.13.2
 
-ruby_container: &ruby_container
-  image: ruby:3.1.1
+base_container: &base_container
+  image: buildpack-deps:bookworm
 
 build_containers: &build_containers
+  resource_class: medium
   docker:
-    - <<: *ruby_container
+    - <<: *base_container
 
 slack_context: &slack_context
   context:
@@ -64,14 +65,45 @@ commands:
                 event: pass
                 channel: builds
                 template: SLACK_SUCCESS_NOTIFICATION
+
   configure_build_tools:
     steps:
-      - run: ./scripts/ci/common/install-openjdk.sh
+      - run: ./scripts/ci/common/install-slack-deps.sh
+      - restore_cache:
+          keys:
+            - asdf-dependencies-{{ arch }}-v2-{{ checksum ".tool-versions" }}
+            - asdf-dependencies-{{ arch }}-v2-
+      - run: ./scripts/ci/common/install-asdf.sh
+      - run: ./scripts/ci/common/configure-asdf.sh
+      - run: ./scripts/ci/common/install-asdf-dependencies.sh
+      - save_cache:
+          key: asdf-dependencies-{{ arch }}-v2-{{ checksum ".tool-versions" }}
+          paths:
+            - ~/.asdf
+
+  configure_leiningen:
+    steps:
+      - restore_cache:
+          keys:
+            - leiningen-v1-{{ checksum "Rakefile" }}
+            - leiningen-v1-
+      - run: ./scripts/ci/common/ensure-leiningen.sh
+      - save_cache:
+          key: leiningen-v1-{{ checksum "Rakefile" }}
+          paths:
+            - vendor/leiningen
+            - ~/.lein
+
+  configure_vendored_tools:
+    steps:
+      - configure_leiningen
+
   configure_secrets_tools:
     steps:
       - run: ./scripts/ci/common/upgrade-gpg.sh
       - run: ./scripts/ci/common/install-git-crypt.sh
       - run: ./scripts/ci/common/install-gpg-key.sh
+
   configure_release_tools:
     steps:
       - add_ssh_keys:
@@ -85,15 +117,22 @@ jobs:
     <<: *build_containers
     steps:
       - checkout
+      - restore_dependency_caches
+      - configure_secrets_tools
       - configure_build_tools
+      - configure_vendored_tools
       - run: ./scripts/ci/steps/build.sh
+      - save_dependency_caches
       - notify
 
   prerelease:
     <<: *build_containers
     steps:
       - checkout
+      - restore_dependency_caches
+      - configure_secrets_tools
       - configure_build_tools
+      - configure_vendored_tools
       - configure_secrets_tools
       - configure_release_tools
       - run: ./scripts/ci/steps/prerelease.sh
@@ -103,7 +142,10 @@ jobs:
     <<: *build_containers
     steps:
       - checkout
+      - restore_dependency_caches
+      - configure_secrets_tools
       - configure_build_tools
+      - configure_vendored_tools
       - configure_secrets_tools
       - configure_release_tools
       - run: ./scripts/ci/steps/release.sh
@@ -113,8 +155,8 @@ jobs:
     <<: *build_containers
     steps:
       - checkout
-      - configure_build_tools
       - configure_secrets_tools
+      - configure_build_tools
       - run: ./scripts/ci/steps/merge-pull-request.sh
       - notify
 

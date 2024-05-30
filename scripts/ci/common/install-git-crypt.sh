@@ -4,7 +4,7 @@
 set -e
 set -o pipefail
 
-apt-get update
+apt-get --allow-releaseinfo-change update
 apt-get install -y --no-install-recommends \
   git \
   ssh \

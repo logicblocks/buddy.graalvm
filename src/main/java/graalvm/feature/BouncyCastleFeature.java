@@ -1,4 +1,4 @@
-package feature;
+package graalvm.feature;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.graalvm.nativeimage.hosted.Feature;
